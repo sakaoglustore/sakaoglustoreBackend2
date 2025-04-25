@@ -13,6 +13,8 @@ const GiftBoxSchema = new mongoose.Schema({
   description: String,
   kdvOrani: Number,
   kutuUcreti: Number,
+  kargoUcreti: Number, // eklendi
+  fullPrice: Number,   // eklendi
   items: {
     low: [ItemSchema],
     medium: [ItemSchema],

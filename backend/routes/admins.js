@@ -44,9 +44,17 @@ router.get('/list', adminAuth, async (req, res) => {
 
 // ✅ Admin Güncelle
 router.put('/update/:id', adminAuth, async (req, res) => {
-  if (!req.admin.isSuperAdmin) return res.status(403).json({ message: 'Yetkisiz' });
-
   try {
+    const targetAdmin = await Admin.findById(req.params.id);
+    if (!targetAdmin) return res.status(404).json({ message: 'Admin bulunamadı' });
+
+    // ❌ superadmin@example.com güncellenemez
+    if (targetAdmin.email === 'superadmin@example.com') {
+      return res.status(403).json({ message: 'Bu hesap güncellenemez' });
+    }
+
+    if (!req.admin.isSuperAdmin) return res.status(403).json({ message: 'Yetkisiz' });
+
     const updated = await Admin.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
@@ -58,25 +66,28 @@ router.put('/update/:id', adminAuth, async (req, res) => {
   }
 });
 
+
 // ✅ Admin Sil
 router.delete('/delete/:id', adminAuth, async (req, res) => {
-  if (!req.admin.isSuperAdmin) return res.status(403).json({ message: 'Yetkisiz' });
-
   try {
     const adminToDelete = await Admin.findById(req.params.id);
-
     if (!adminToDelete) {
       return res.status(404).json({ message: 'Admin bulunamadı' });
     }
 
-    // ❌ Kendi hesabını silemez
+    // ❌ superadmin@example.com silinemez
+    if (adminToDelete.email === 'superadmin@example.com') {
+      return res.status(403).json({ message: 'Bu hesap silinemez' });
+    }
+
+    // ❌ kendi hesabını silmesin
     if (adminToDelete._id.toString() === req.admin._id.toString()) {
       return res.status(403).json({ message: 'Kendi hesabınızı silemezsiniz' });
     }
 
-    // ❌ Başkasının oluşturduğu admini silemez (süper admin olsa bile)
-    if (!adminToDelete.createdBy || adminToDelete.createdBy.toString() !== req.admin._id.toString()) {
-      return res.status(403).json({ message: 'Bu admini silme yetkiniz yok' });
+    // ❌ sadece superadmin@example.com silebilir
+    if (req.admin.email !== 'superadmin@example.com') {
+      return res.status(403).json({ message: 'Bu işlemi yapmaya yetkiniz yok' });
     }
 
     await Admin.findByIdAndDelete(req.params.id);
@@ -85,5 +96,6 @@ router.delete('/delete/:id', adminAuth, async (req, res) => {
     res.status(500).json({ message: 'Silme hatası', error: err.message });
   }
 });
+
 
 module.exports = router;

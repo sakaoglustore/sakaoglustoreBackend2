@@ -9,11 +9,10 @@ router.post('/', adminAuth, async (req, res) => {
     await newBox.save();
     res.status(201).json({ message: 'Ürün eklendi', box: newBox });
   } catch (err) {
-    console.error('Ekleme hatası:', err);
     res.status(500).json({ message: 'Ürün eklenemedi', error: err.message });
   }
 });
-// Tüm ürünleri getir
+
 router.get('/all', async (req, res) => {
   try {
     const boxes = await GiftBox.find();
@@ -23,7 +22,6 @@ router.get('/all', async (req, res) => {
   }
 });
 
-// Ürün sil
 router.delete('/:id', async (req, res) => {
   try {
     await GiftBox.findByIdAndDelete(req.params.id);
@@ -33,7 +31,6 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// routes/giftbox.js
 router.get('/:id', async (req, res) => {
   try {
     const product = await GiftBox.findById(req.params.id);
@@ -45,23 +42,29 @@ router.get('/:id', async (req, res) => {
 });
 
 router.get('/item/:id', async (req, res) => {
-  const productId = req.params.id;
-
   try {
     const giftBox = await GiftBox.findOne({
       $or: [
-        { 'items.low.id': productId },
-        { 'items.medium.id': productId },
-        { 'items.high.id': productId }
+        { 'items.low.id': req.params.id },
+        { 'items.medium.id': req.params.id },
+        { 'items.high.id': req.params.id }
       ]
     });
-
     if (!giftBox) return res.status(404).json({ message: 'GiftBox bulunamadı.' });
-
     res.json(giftBox);
   } catch (err) {
-    console.error('GiftBox arama hatası:', err);
     res.status(500).json({ message: 'Sunucu hatası' });
+  }
+});
+
+router.put('/:id', adminAuth, async (req, res) => {
+  try {
+    const updated = await GiftBox.findByIdAndUpdate(req.params.id, {
+      $set: req.body
+    }, { new: true });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: 'Güncelleme hatası', error: err.message });
   }
 });
 
