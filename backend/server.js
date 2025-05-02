@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const dotenv = require('dotenv');
+
 const giftRoutes = require('./routes/giftBoxes');
 const authRoutes = require('./routes/auth');
 const cartRoutes = require('./routes/cart');
@@ -10,9 +12,17 @@ const adminAuthRoutes = require('./routes/adminAuth');
 const adminRoutes = require('./routes/admins');
 const adminStatsRoutes = require('./routes/adminStats');
 const orderRoutes = require('./routes/orders');
+const paymentRoutes = require('./routes/payments');
+
+dotenv.config();
 
 const app = express();
-app.use(cors());
+
+app.use(cors({
+  origin: 'http://localhost:3000', // veya deployed frontend domainin
+  credentials: true
+}));
+
 app.use(express.json());
 
 app.use('/api/cart', cartRoutes);
@@ -24,8 +34,7 @@ app.use('/api/adminAuth', adminAuthRoutes);
 app.use('/api/admins', adminRoutes);
 app.use('/api/adminStats', adminStatsRoutes);
 app.use('/api/orders', orderRoutes);
-
-require('dotenv').config();
+app.use('/api/payment', paymentRoutes);
 
 mongoose.connect(process.env.MONGO_URL, {
   useNewUrlParser: true,

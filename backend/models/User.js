@@ -6,24 +6,27 @@ const addressSchema = new mongoose.Schema({
 });
 
 const UserSchema = new mongoose.Schema({
-  firstName: { type: String, required: true },
-  lastName:  { type: String, required: true },
-  email:     { type: String, required: true, unique: true },
-  phone:     { type: String, required: true, unique: true },
-  password:  { type: String, required: true },
-  addresses: [addressSchema],
-  cart: [
-    {
-      productId: { type: mongoose.Schema.Types.ObjectId, ref: 'GiftBox' },
-      quantity: Number
-    }
-  ],
+  firstName:  { type: String, required: true },
+  lastName:   { type: String, required: true },
+  email:      { type: String, required: true, unique: true },
+  phone:      { type: String, required: true, unique: true },
+  password:   { type: String, required: true },
+  addresses:  [addressSchema],
+  cart:       [{ productId: { type: mongoose.Schema.Types.ObjectId, ref: 'GiftBox' }, quantity: Number }],
   collectedLowItems: [String],
-  wonMediumItems: [String],
-  wonHighItem: { type: String, default: null },  
-  orders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }],
-  openedBoxesToday: { type: Number, default: 0 },
-  lastBoxOpenedDate: Date
+  wonMediumItems:    [String],
+  wonHighItem:       { type: String, default: null },
+  orders:            [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }],
+  openedBoxesToday:  { type: Number, default: 0 },
+  lastBoxOpenedDate: Date,
+
+  isVerified:         { type: Boolean, default: false },
+  verificationToken:  { type: String },
+  verificationExpires:{ type: Date },
+  temporaryCreatedAt: { type: Date, default: null } // TTL için
 });
+
+// Sadece onaysız kullanıcıları 24 saat sonra sil
+UserSchema.index({ temporaryCreatedAt: 1 }, { expireAfterSeconds: 86400 });
 
 module.exports = mongoose.model('User', UserSchema);
