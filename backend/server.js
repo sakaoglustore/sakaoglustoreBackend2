@@ -26,6 +26,8 @@ app.use(cors({
     'https://sakaoglustore.net',
     'https://admin.sakaoglustore.net',
     'https://www.admin.sakaoglustore.net',
+    'https://main.d3og6nu3h4ow7n.amplifyapp.com',
+    'https://master.d2ts14tpekdi5s.amplifyapp.com',
   ],
   credentials: true
 }));
