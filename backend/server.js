@@ -40,7 +40,7 @@ mongoose.connect(process.env.MONGO_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => console.log('✅ MongoDB Bağlantısı Başarılı'))
+.then(() => console.log('✅ MongoDB Bağlantısı Başarılıı'))
 .catch(err => console.log('MongoDB Bağlantı Hatası:', err));
 
 const PORT = process.env.PORT || 5000;
