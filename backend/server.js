@@ -7,7 +7,7 @@ const giftRoutes = require('./routes/giftBoxes');
 const authRoutes = require('./routes/auth');
 const cartRoutes = require('./routes/cart');
 const userRoutes = require('./routes/user');
-const boxOpenRoutes = require('./routes/boxOpen'); 
+const boxOpenRoutes = require('./routes/boxOpen');
 const adminAuthRoutes = require('./routes/adminAuth');
 const adminRoutes = require('./routes/admins');
 const adminStatsRoutes = require('./routes/adminStats');
@@ -18,8 +18,15 @@ dotenv.config();
 
 const app = express();
 
+// CORS configuration for specific domains
 app.use(cors({
-  origin: 'http://localhost:3000', // veya deployed frontend domainin
+  origin: [
+    'http://localhost:3000',  // For local development
+    'https://www.sakaoglustore.net',
+    'https://sakaoglustore.net',
+    'https://admin.sakaoglustore.net',
+    'https://www.admin.sakaoglustore.net',
+  ],
   credentials: true
 }));
 
@@ -29,7 +36,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/gifts', giftRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/box', boxOpenRoutes); 
+app.use('/api/box', boxOpenRoutes);
 app.use('/api/adminAuth', adminAuthRoutes);
 app.use('/api/admins', adminRoutes);
 app.use('/api/adminStats', adminStatsRoutes);
@@ -40,7 +47,7 @@ mongoose.connect(process.env.MONGO_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => console.log('✅ MongoDB Bağlantısı Başarılıı'))
+.then(() => console.log('✅ MongoDB Bağlantısı Başarılı'))
 .catch(err => console.log('MongoDB Bağlantı Hatası:', err));
 
 const PORT = process.env.PORT || 5000;

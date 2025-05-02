@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Admin = require('./models/Admin');
 
-mongoose.connect('mongodb+srv://eyilerege:WvKsrbqwp1sLR226@cluster.y9qo0.mongodb.net/sakaogluDB?retryWrites=true&w=majority&appName=Cluster', {
+mongoose.connect('mongodb+srv://muratsakaoglustore:Ci1xpiU9J6nkVgv0@sakaoglustoredb.6jb9eqh.mongodb.net/?retryWrites=true&w=majority&appName=sakaoglustoreDB', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
@@ -16,8 +16,8 @@ mongoose.connect('mongodb+srv://eyilerege:WvKsrbqwp1sLR226@cluster.y9qo0.mongodb
 
   const superAdmin = new Admin({
     name: 'Süper Admin',
-    email: 'superadmin@example.com',
-    password: '123456', // Şifreyi güvenli hale getirmek için hash önerilir
+    email: 'murat.sakaoglu.store@gmail.com',
+    password: '3253251aA?', // Şifreyi güvenli hale getirmek için hash önerilir
     isSuperAdmin: true
   });
 
