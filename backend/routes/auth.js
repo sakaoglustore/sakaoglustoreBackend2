@@ -53,7 +53,7 @@ router.post('/signup', async (req, res) => {
 
     await newUser.save();
 
-    const verificationUrl = `http://api.sakaoglustore.net/verify?token=${verificationToken}&email=${email}`;
+    const verificationUrl = `http://master.d2ts14tpekdi5s.amplifyapp.com/verify?token=${verificationToken}&email=${email}`;
 
     try {
       await transporter.sendMail({
