@@ -53,7 +53,7 @@ router.post('/signup', async (req, res) => {
 
     await newUser.save();
 
-    const verificationUrl = `http://localhost:3000/verify?token=${verificationToken}&email=${email}`;
+    const verificationUrl = `https://sakaoglustore.net/verify?token=${verificationToken}&email=${email}`;
 
     try {
       await transporter.sendMail({
