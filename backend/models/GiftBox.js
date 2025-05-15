@@ -10,6 +10,7 @@ const GiftBoxSchema = new mongoose.Schema({
   name: String,
   price: Number,
   image: String,
+  whatInside: String,
   description: String,
   kdvOrani: Number,
   kutuUcreti: Number,

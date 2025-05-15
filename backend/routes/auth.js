@@ -57,7 +57,7 @@ router.post('/signup', async (req, res) => {
 
     try {
       await transporter.sendMail({
-        from: 'Sakaoglu Store <murat.sakaoglu.store@gmail.com>',
+        from: 'Sakaoglu Store <info@sakaoglustore.com>',
         to: email,
         subject: 'Hesabınızı Doğrulayın',
         html: `<p>Doğrulamak için <a href="${verificationUrl}">buraya tıkla</a></p>`

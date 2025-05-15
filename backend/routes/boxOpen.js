@@ -1,20 +1,28 @@
-// 📦 boxOpen.js
 const express = require('express');
-const mongoose = require('mongoose');
 const router = express.Router();
-const User = require('../models/User');
-const GiftBox = require('../models/GiftBox');
-const Order = require('../models/Order');
+const mongoose = require('mongoose');
 const crypto = require('crypto');
 
-const randomElement = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const User = require('../models/User');
+const Order = require('../models/Order');
+const GiftBox = require('../models/GiftBox');
 
-// 📦 Kutu Açma ve Sipariş Oluşturma
+// Yardımcı Fonksiyon
+function randomElement(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 router.post('/open-box/:userId/:addressId', async (req, res) => {
   try {
     const { userId, addressId } = req.params;
+    const { quantity } = req.body;
+
+    if (!quantity || quantity <= 0) {
+      return res.status(400).json({ message: 'Geçersiz kutu adedi.' });
+    }
+
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+    if (!user) return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
 
     const today = new Date();
     const isNewDay = !user.lastBoxOpenedDate || user.lastBoxOpenedDate.toDateString() !== today.toDateString();
@@ -23,66 +31,68 @@ router.post('/open-box/:userId/:addressId', async (req, res) => {
       user.lastBoxOpenedDate = today;
     }
 
-    const boxCount = req.body.quantity || 1;
-    if (user.openedBoxesToday + boxCount > 3) {
+    if (user.openedBoxesToday + quantity > 3) {
       return res.status(403).json({ message: 'Günlük 3 kutu açma hakkınızı aşıyorsunuz.' });
     }
 
     const giftBox = await GiftBox.findOne({ name: 'Gift Box' });
-    if (!giftBox) return res.status(404).json({ message: 'Gift Box bulunamadı' });
+    if (!giftBox) return res.status(404).json({ message: 'Gift Box bulunamadı.' });
 
     const { low, medium, high } = giftBox.items;
     const totalOrders = await Order.countDocuments();
-
     const orders = [];
 
-    for (let i = 0; i < boxCount; i++) {
+    for (let i = 0; i < quantity; i++) {
       let selectedItem;
-      const isHigh = (totalOrders + i) % 2000 === 0 && totalOrders !== 0;
-      const isMedium = (totalOrders + i) % 10 === 0 && totalOrders !== 0;
+      const currentOrderNumber = totalOrders + i + 1;
+
+      const isHigh = currentOrderNumber % 2000 === 0;
+      const isMedium = currentOrderNumber % 10 === 0;
 
       if (isHigh && !user.wonHighItem) {
         selectedItem = high[0];
-        user.wonHighItem = new mongoose.Types.ObjectId(); // dummy
+        user.wonHighItem = new mongoose.Types.ObjectId(); // dummy kayıt
       } else if (isMedium && user.wonMediumItems.length < 5) {
-        const remainingMedium = medium.filter(m => !user.wonMediumItems.includes(m.id));
-        if (remainingMedium.length > 0) {
-          const mid = randomElement(remainingMedium);
-          selectedItem = mid;
-          user.wonMediumItems.push(mid.id);
+        const availableMediumItems = medium.filter(m => !user.wonMediumItems.includes(m.id));
+        if (availableMediumItems.length > 0) {
+          selectedItem = randomElement(availableMediumItems);
+          user.wonMediumItems.push(selectedItem.id);
         }
       }
 
       if (!selectedItem) {
-        const remainingLow = low.filter(l => !user.collectedLowItems.includes(l.id));
-        if (remainingLow.length === 0) {
-          user.collectedLowItems = [];
+        const availableLowItems = low.filter(l => !user.collectedLowItems.includes(l.id));
+        if (availableLowItems.length === 0) {
+          user.collectedLowItems = []; // Reset
         }
-        const refreshLow = low.filter(l => !user.collectedLowItems.includes(l.id));
-        selectedItem = randomElement(refreshLow);
+        const refreshedLowItems = low.filter(l => !user.collectedLowItems.includes(l.id));
+        selectedItem = randomElement(refreshedLowItems);
         user.collectedLowItems.push(selectedItem.id);
       }
 
       const confirmationCode = crypto.randomBytes(4).toString('hex').toUpperCase();
-      const orderNumber = totalOrders + i + 1;
 
       const newOrder = new Order({
         userId,
         addressId,
         items: [{ productId: giftBox._id, quantity: 1 }],
-        totalPrice: giftBox.price,
+        totalPrice: giftBox.fullPrice || giftBox.price,
         confirmationCode,
-        whatOrdered: selectedItem.id,
-        sendOrderId: selectedItem.id
+        whatOrdered: selectedItem.name,
+        sendOrderId: selectedItem.id,
       });
-      
 
       await newOrder.save();
       user.orders.push(newOrder._id);
-      orders.push({ item: selectedItem, confirmationCode, orderNumber });
+
+      orders.push({
+        confirmationCode,
+        item: selectedItem.name,
+        orderNumber: currentOrderNumber,
+      });
     }
 
-    user.openedBoxesToday += boxCount;
+    user.openedBoxesToday += quantity;
     await user.save();
 
     res.status(200).json({ orders });

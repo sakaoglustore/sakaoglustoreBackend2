@@ -60,4 +60,19 @@ router.delete('/remove/:userId/:productId', async (req, res) => {
       res.status(500).json({ message: 'Kaldırma hatası', error: err.message });
     }
   });
+
+router.delete('/clear/:userId', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+
+    user.cart = [];
+    await user.save();
+
+    res.status(200).json({ message: 'Sepet temizlendi' });
+  } catch (err) {
+    res.status(500).json({ message: 'Sunucu hatası', error: err.message });
+  }
+});
+
 module.exports = router;

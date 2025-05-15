@@ -2,7 +2,10 @@ const mongoose = require('mongoose');
 
 const addressSchema = new mongoose.Schema({
   title: String,
-  fullAddress: String        
+  city: String,
+  district: String,
+  fullAddress: String,
+  phone: String 
 });
 
 const UserSchema = new mongoose.Schema({
@@ -23,7 +26,7 @@ const UserSchema = new mongoose.Schema({
   isVerified:         { type: Boolean, default: false },
   verificationToken:  { type: String },
   verificationExpires:{ type: Date },
-  temporaryCreatedAt: { type: Date, default: null } // TTL için
+  temporaryCreatedAt: { type: Date, default: null }
 });
 
 // Sadece onaysız kullanıcıları 24 saat sonra sil

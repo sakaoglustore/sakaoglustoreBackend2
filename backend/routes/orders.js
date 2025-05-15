@@ -4,38 +4,50 @@ const Order = require('../models/Order');
 const adminAuth = require('../middlewares/adminAuth');
 const User = require('../models/User'); 
 
-// Siparişleri listele (adres ve kullanıcı bilgisi dahil)
 router.get('/', adminAuth, async (req, res) => {
   try {
-    const { query } = req.query;
+    const { query = '', page = 1, limit = 50 } = req.query;
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
 
+    // Tüm siparişleri çek
     const orders = await Order.find()
       .populate({
         path: 'userId',
-        select: 'firstName lastName email addresses',
+        select: 'firstName lastName email phone addresses',
       })
       .populate('items.productId', 'name')
+      .sort({ createdAt: -1 }) // Yeni siparişler önce
       .exec();
 
-    // Filtreleme
+    // Arama filtrelemesi
     const filtered = query
       ? orders.filter(order => {
-          const fullName = `${order.userId.firstName} ${order.userId.lastName}`.toLowerCase();
-          const email = order.userId.email.toLowerCase();
+          const fullName = `${order.userId?.firstName || ''} ${order.userId?.lastName || ''}`.toLowerCase();
+          const email = order.userId?.email?.toLowerCase() || '';
           const orderId = order._id.toString().toLowerCase();
-          const q = query.toLowerCase();
+          const search = query.toLowerCase();
 
           return (
-            fullName.includes(q) ||
-            email.includes(q) ||
-            orderId.includes(q)
+            fullName.includes(search) ||
+            email.includes(search) ||
+            orderId.includes(search)
           );
         })
       : orders;
 
-    res.json(filtered);
+    // Sayfalama (örneğin 50 şer 50 şer göster)
+    const startIndex = (pageNumber - 1) * limitNumber;
+    const paginated = filtered.slice(startIndex, startIndex + limitNumber);
+
+    res.json({
+      orders: paginated,
+      totalOrders: filtered.length,
+      currentPage: pageNumber,
+      totalPages: Math.ceil(filtered.length / limitNumber),
+    });
   } catch (err) {
-    console.error(err);
+    console.error('❌ Sipariş çekme hatası:', err);
     res.status(500).json({ message: 'Siparişler alınamadı' });
   }
 });
