@@ -1,15 +1,23 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose'); // <-- Bunu en üste eklemen gerekiyordu!
+
+const addressSchema = new mongoose.Schema({
+  title: String,
+  fullAddress: String,
+  city: String,
+  district: String,
+  phone: String
+});
 
 const OrderSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  addressId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  address: addressSchema, // Adres artık burada saklanıyor ✅
   items: [
     {
-      productId: { type: String, ref: 'GiftBox' },
+      productId: { type: mongoose.Schema.Types.ObjectId, ref: 'GiftBox' },
       quantity: Number
     }
   ],
-  whatOrdered: { type: String }, // ✅ Buraya taşıdık
+  whatOrdered: { type: String },
   sendOrderId: { type: String },
   totalPrice: Number,
   confirmationCode: String,

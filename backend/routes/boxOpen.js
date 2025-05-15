@@ -12,6 +12,7 @@ function randomElement(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+// 📦 Kutu açma ve sipariş oluşturma
 router.post('/open-box/:userId/:addressId', async (req, res) => {
   try {
     const { userId, addressId } = req.params;
@@ -23,6 +24,9 @@ router.post('/open-box/:userId/:addressId', async (req, res) => {
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
+
+    const selectedAddress = user.addresses.id(addressId);
+    if (!selectedAddress) return res.status(404).json({ message: 'Adres bulunamadı.' });
 
     const today = new Date();
     const isNewDay = !user.lastBoxOpenedDate || user.lastBoxOpenedDate.toDateString() !== today.toDateString();
@@ -74,7 +78,13 @@ router.post('/open-box/:userId/:addressId', async (req, res) => {
 
       const newOrder = new Order({
         userId,
-        addressId,
+        address: {
+          title: selectedAddress.title,
+          fullAddress: selectedAddress.fullAddress,
+          city: selectedAddress.city,
+          district: selectedAddress.district,
+          phone: selectedAddress.phone
+        },
         items: [{ productId: giftBox._id, quantity: 1 }],
         totalPrice: giftBox.fullPrice || giftBox.price,
         confirmationCode,
