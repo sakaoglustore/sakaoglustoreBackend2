@@ -16,7 +16,17 @@ const UserSchema = new mongoose.Schema({
   password:   { type: String, required: true },
   addresses:  [addressSchema],
   cart:       [{ productId: { type: mongoose.Schema.Types.ObjectId, ref: 'GiftBox' }, quantity: Number }],
-  collectedLowItems: [String],
+  collectedLowItems: {
+    type: [String],
+    default: [],
+    validate: {
+      validator: function(array) {
+        // Ensure no duplicates and max 15 items
+        return array.length <= 10 && new Set(array).size === array.length;
+      },
+      message: 'Collected low items must be unique and cannot exceed 15 items'
+    }
+  },
   wonMediumItems:    [String],
   wonHighItem:       { type: String, default: null },
   orders:            [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }],

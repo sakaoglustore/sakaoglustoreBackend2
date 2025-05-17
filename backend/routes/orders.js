@@ -107,6 +107,32 @@ router.put('/:orderId/tracking', adminAuth, async (req, res) => {
       console.error(err);
       res.status(500).json({ message: 'Sipariş iptali başarısız' });
     }
+  });  router.put('/verify-order/:orderId', adminAuth, async (req, res) => {
+    try {
+      const { orderId } = req.params;
+      const { status } = req.body; // 'confirmed' or 'rejected'
+  
+      if (!['confirmed', 'rejected'].includes(status)) {
+        return res.status(400).json({ message: 'Geçersiz sipariş durumu' });
+      }
+  
+      const order = await Order.findById(orderId);
+      if (!order) {
+        return res.status(404).json({ message: 'Sipariş bulunamadı' });
+      }
+  
+      order.status = status;
+      order.ibanPaymentVerified = status === 'confirmed';
+      await order.save();
+  
+      // Send notification to user about order status
+      // TODO: Implement notification system
+  
+      res.status(200).json({ message: 'Sipariş durumu güncellendi', order });
+    } catch (error) {
+      console.error('Sipariş onaylama hatası:', error);
+      res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+    }
   });
 
 
