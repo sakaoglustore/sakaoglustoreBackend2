@@ -23,6 +23,9 @@ async function getNextHighItemOrder() {
 }
 
 router.post('/open-box/:userId/:addressId', async (req, res) => {
+  const { userId, addressId } = req.params;
+  console.log('userId:', userId, 'addressId:', addressId);
+
   try {
     const { userId, addressId } = req.params;
     const { quantity } = req.body;
@@ -41,7 +44,7 @@ router.post('/open-box/:userId/:addressId', async (req, res) => {
       }
     });
 
-    if (todayUserOrders + quantity > 1) {
+    if (todayUserOrders + quantity > 2) {
       return res.status(403).json({ message: 'Günlük kutu limiti 1 adettir.' });
     }
 
@@ -56,7 +59,7 @@ router.post('/open-box/:userId/:addressId', async (req, res) => {
     if (isNewDay) {
       user.openedBoxesToday = 0;
       user.lastBoxOpenedDate = today;
-    }    if (user.openedBoxesToday + quantity > 1) {
+    }    if (user.openedBoxesToday + quantity > 2) {
       return res.status(403).json({ message: 'Günlük 1 kutu açma hakkınızı aşıyorsunuz.' });
     }
 
@@ -79,8 +82,7 @@ router.post('/open-box/:userId/:addressId', async (req, res) => {
 
     for (let i = 0; i < quantity; i++) {
       let selectedItem;
-      const currentOrderNumber = todayOrders + i + 1;
-
+      const currentOrderNumber = todayUserOrders + i + 1;
       // High item kontrolü
       if (currentOrderNumber === nextHighItemOrder) {
         if (!hasWonHighThisMonth) {

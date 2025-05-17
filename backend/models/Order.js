@@ -16,11 +16,10 @@ const OrderSchema = new mongoose.Schema({
       productId: { type: mongoose.Schema.Types.ObjectId, ref: 'GiftBox' },
       quantity: Number
     }
-  ],
-  whatOrdered: { type: String },
+  ],  whatOrdered: { type: String },
   sendOrderId: { type: String },
   totalPrice: Number,
-  confirmationCode: String,
+  confirmationCode: { type: String, unique: true, sparse: true },
   trackingNumber: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },
   nextHighItemOrder: { type: Number },

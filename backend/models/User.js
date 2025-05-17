@@ -14,6 +14,11 @@ const UserSchema = new mongoose.Schema({
   email:      { type: String, required: true, unique: true },
   phone:      { type: String, required: true, unique: true },
   password:   { type: String, required: true },
+  orderVerificationCode: { 
+    type: String, 
+    unique: true,
+    sparse: true
+  },
   addresses:  [addressSchema],
   cart:       [{ productId: { type: mongoose.Schema.Types.ObjectId, ref: 'GiftBox' }, quantity: Number }],
   collectedLowItems: {

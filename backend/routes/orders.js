@@ -120,13 +120,17 @@ router.put('/:orderId/tracking', adminAuth, async (req, res) => {
       if (!order) {
         return res.status(404).json({ message: 'Sipariş bulunamadı' });
       }
+
+      // Onay durumunda confirmation kodu oluştur
+      if (status === 'confirmed') {
+        // 8 haneli benzersiz bir onay kodu oluştur
+        const confirmationCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+        order.confirmationCode = confirmationCode;
+      }
   
       order.status = status;
       order.ibanPaymentVerified = status === 'confirmed';
       await order.save();
-  
-      // Send notification to user about order status
-      // TODO: Implement notification system
   
       res.status(200).json({ message: 'Sipariş durumu güncellendi', order });
     } catch (error) {

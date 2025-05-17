@@ -8,12 +8,20 @@ const adminAuth = require('../middlewares/adminAuth');
 // 🔄 Profil Bilgisi Güncelle
 router.put('/update-profile/:id', async (req, res) => {
   const { id } = req.params;
-  const { firstName, lastName, phone } = req.body;
+  const { firstName, lastName, phone, verificationCode } = req.body;
 
   try {
+    // Verify if verification code already exists
+    if (verificationCode) {
+      const existingCode = await User.findOne({ verificationCode });
+      if (existingCode && existingCode._id.toString() !== id) {
+        return res.status(400).json({ message: 'Bu onay kodu zaten kullanımda' });
+      }
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       id,
-      { firstName, lastName, phone },
+      { firstName, lastName, phone, verificationCode },
       { new: true }
     );
     res.status(200).json({ updatedUser });
