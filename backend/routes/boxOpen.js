@@ -59,8 +59,8 @@ router.post('/open-box/:userId/:addressId', async (req, res) => {
       user.lastBoxOpenedDate = today;
     }
 
-    if (user.openedBoxesToday + quantity > 2000) {
-      return res.status(403).json({ message: 'Günlük 3 kutu açma hakkınızı aşıyorsunuz.' });
+    if (user.openedBoxesToday + quantity > 1) {
+      return res.status(403).json({ message: 'Günlük 1 kutu açma hakkınızı aşıyorsunuz.' });
     }
 
     const giftBox = await GiftBox.findOne({ name: 'Süpriz Kutu' });
