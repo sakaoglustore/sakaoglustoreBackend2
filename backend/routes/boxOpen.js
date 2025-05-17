@@ -32,18 +32,17 @@ router.post('/open-box/:userId/:addressId', async (req, res) => {
     }
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Daily limit kontrolü
-    const todayOrders = await Order.countDocuments({
+    today.setHours(0, 0, 0, 0);    // Daily limit kontrolü - Kullanıcı başına toplam 1 kutu
+    const todayUserOrders = await Order.countDocuments({
+      userId: userId,
       createdAt: {
         $gte: today,
         $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
       }
     });
 
-    if (todayOrders + quantity > 20000) {
-      return res.status(403).json({ message: 'Günlük satış limiti dolmuştur (20,000).' });
+    if (todayUserOrders + quantity > 1) {
+      return res.status(403).json({ message: 'Günlük kutu limiti 1 adettir.' });
     }
 
     const user = await User.findById(userId);
@@ -57,9 +56,7 @@ router.post('/open-box/:userId/:addressId', async (req, res) => {
     if (isNewDay) {
       user.openedBoxesToday = 0;
       user.lastBoxOpenedDate = today;
-    }
-
-    if (user.openedBoxesToday + quantity > 1) {
+    }    if (user.openedBoxesToday + quantity > 1) {
       return res.status(403).json({ message: 'Günlük 1 kutu açma hakkınızı aşıyorsunuz.' });
     }
 
