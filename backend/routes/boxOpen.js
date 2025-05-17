@@ -44,7 +44,7 @@ router.post('/open-box/:userId/:addressId', async (req, res) => {
       }
     });
 
-    if (todayUserOrders + quantity > 2) {
+    if (todayUserOrders + quantity > 1) {
       return res.status(403).json({ message: 'Günlük kutu limiti 1 adettir.' });
     }
 
@@ -59,7 +59,7 @@ router.post('/open-box/:userId/:addressId', async (req, res) => {
     if (isNewDay) {
       user.openedBoxesToday = 0;
       user.lastBoxOpenedDate = today;
-    }    if (user.openedBoxesToday + quantity > 2) {
+    }    if (user.openedBoxesToday + quantity > 1) {
       return res.status(403).json({ message: 'Günlük 1 kutu açma hakkınızı aşıyorsunuz.' });
     }
 
