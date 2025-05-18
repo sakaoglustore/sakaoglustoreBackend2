@@ -51,7 +51,7 @@ router.post('/signup', async (req, res) => {
 
     await newUser.save();
 
-    const verificationUrl = `http://localhost:3000/verify?token=${verificationToken}&email=${email}`;    try {
+    const verificationUrl = `https://sakaoglustore.net/verify?token=${verificationToken}&email=${email}`;    try {
       await transporter.sendMail({
         from: 'Sakaoglu Store <info@sakaoglustore.com>',
         to: email,
@@ -153,7 +153,7 @@ router.post('/forgot-password', async (req, res) => {
     user.resetExpires = resetExpires;
     await user.save();
 
-    const resetUrl = `http://localhost:3000/reset-password?token=${resetToken}`;
+    const resetUrl = `https://sakaoglustore.net/reset-password?token=${resetToken}`;
     
     await transporter.sendMail({
       from: 'Sakaoglu Store <info@sakaoglustore.com>',

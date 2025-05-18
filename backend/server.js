@@ -21,7 +21,7 @@ const app = express();
 // CORS configuration for specific domains
 app.use(cors({
   origin: [
-    'http://localhost:3000',
+    'https://sakaoglustore.net',
     'http://localhost:3001',
     'https://www.sakaoglustore.net',
     'https://sakaoglustore.net',
