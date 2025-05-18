@@ -8,6 +8,46 @@ const User = require('../models/User');
 const router = express.Router();
 const SECRET_KEY = 'sakaoglu_secret_key';
 
+// Yeni doğrulama token oluşturup e-posta gönderme yardımcı fonksiyonu
+async function generateNewVerificationToken(user) {
+  try {
+    // Yeni doğrulama token'ı oluştur
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    
+    // Kullanıcı bilgilerini güncelle
+    user.verificationToken = verificationToken;
+    user.verificationExpires = verificationExpires;
+    await user.save();
+    
+    // Doğrulama e-postası gönder
+    const verificationUrl = `https://sakaoglustore.net/verify?token=${verificationToken}&email=${user.email}`;
+    
+    await transporter.sendMail({
+      from: 'Sakaoglu Store <info@sakaoglustore.com>',
+      to: user.email,
+      subject: 'Hesabınızı Doğrulayın (Yeniden)',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+          <h2 style="color: #333;">Hesap Doğrulaması</h2>
+          <p>Merhaba ${user.firstName},</p>
+          <p>Henüz doğrulanmamış hesabınız için yeni bir doğrulama bağlantısı talep ettiniz. Hesabınızı doğrulamak için aşağıdaki bağlantıya tıklayın:</p>
+          <p style="text-align: center; margin: 20px 0;">
+            <a href="${verificationUrl}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Hesabımı Doğrula</a>
+          </p>
+          <p style="color: #666; font-size: 13px;">Bu bağlantı 24 saat süreyle geçerlidir. Bu süre sonunda bağlantı geçerliliğini yitirecektir.</p>
+          <p>İyi günler,<br>Sakaoglu Store Ekibi</p>
+        </div>
+      `
+    });
+    
+    return true;
+  } catch (err) {
+    console.error('❌ Yeni doğrulama maili gönderilemedi:', err);
+    return false;
+  }
+}
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -72,10 +112,13 @@ router.post('/signup', async (req, res) => {
       console.log('✅ Mail başarıyla gönderildi');
     } catch (err) {
       console.error('❌ Mail gönderilemedi:', err);
-    }
-    
+    }    
 
-    res.status(201).json({ message: 'Kayıt başarılı. Lütfen e-postanızı doğrulayın.' });
+    res.status(201).json({ 
+      message: 'Kayıt başarılı. Lütfen e-postanızı doğrulayın. E posta görünmüyor ise spam bölümünü kontrol ediniz.',
+      requireEmailVerification: true,
+      email: email
+    });
   } catch (err) {
     res.status(500).json({ message: 'Kayıt başarısız', error: err.message });
   }
@@ -113,7 +156,15 @@ router.post('/login', async (req, res) => {
     if (!user) return res.status(400).json({ message: 'Kullanıcı bulunamadı' });
 
     if (!user.isVerified) {
-      return res.status(403).json({ message: 'E-posta adresinizi doğrulamadan giriş yapamazsınız.' });
+      // E-posta doğrulama kontrolü başarısız
+      const resendVerificationLink = await generateNewVerificationToken(user);
+      
+      return res.status(403).json({ 
+        message: 'E-posta adresinizi doğrulamadan giriş yapamazsınız.', 
+        requireEmailVerification: true,
+        email: user.email,
+        resendVerification: resendVerificationLink
+      });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
