@@ -12,7 +12,7 @@ const UserSchema = new mongoose.Schema({
   firstName:  { type: String, required: true },
   lastName:   { type: String, required: true },
   email:      { type: String, required: true, unique: true },
-  phone:      { type: String, required: true, unique: true },
+  phone:      { type: String, required: true },
   password:   { type: String, required: true },
   orderVerificationCode: { 
     type: String, 
@@ -37,11 +37,14 @@ const UserSchema = new mongoose.Schema({
   orders:            [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }],
   openedBoxesToday:  { type: Number, default: 0 },
   lastBoxOpenedDate: Date,
-
   isVerified:         { type: Boolean, default: false },
   verificationToken:  { type: String },
   verificationExpires:{ type: Date },
-  temporaryCreatedAt: { type: Date, default: null }
+  temporaryCreatedAt: { type: Date, default: null },
+  
+  // Şifre sıfırlama alanları
+  resetToken:         { type: String },
+  resetExpires:       { type: Date }
 });
 
 // Sadece onaysız kullanıcıları 24 saat sonra sil
