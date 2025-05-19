@@ -19,7 +19,8 @@ const GiftBoxSchema = new mongoose.Schema({
   items: {
     low: [ItemSchema],
     medium: [ItemSchema],
-    high: [ItemSchema]
+    high: [ItemSchema],
+    maximum: [ItemSchema]
   }
 });
 

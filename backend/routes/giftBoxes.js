@@ -47,7 +47,8 @@ router.get('/item/:id', async (req, res) => {
       $or: [
         { 'items.low.id': req.params.id },
         { 'items.medium.id': req.params.id },
-        { 'items.high.id': req.params.id }
+        { 'items.high.id': req.params.id },
+        { 'items.maximum.id': req.params.id }
       ]
     });
     if (!giftBox) return res.status(404).json({ message: 'GiftBox bulunamadı.' });
@@ -59,11 +60,18 @@ router.get('/item/:id', async (req, res) => {
 
 router.put('/:id', adminAuth, async (req, res) => {
   try {
+    console.log('Updating gift box with ID:', req.params.id);
+    console.log('Update payload received:', req.body);
+    console.log('Items in payload:', req.body.items);
+
     const updated = await GiftBox.findByIdAndUpdate(req.params.id, {
       $set: req.body
     }, { new: true });
+    
+    console.log('Updated document:', updated);
     res.json(updated);
   } catch (err) {
+    console.error('Update error:', err);
     res.status(500).json({ message: 'Güncelleme hatası', error: err.message });
   }
 });
