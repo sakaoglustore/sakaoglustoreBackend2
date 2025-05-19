@@ -6,18 +6,34 @@ const User = require('../models/User');
 
 router.get('/', adminAuth, async (req, res) => {
   try {
-    const { query = '', page = 1, limit = 50 } = req.query;
+    const { query = '', page = 1, limit = 50, startDate, endDate, status } = req.query;
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
 
-    // Tüm siparişleri çek
-    const orders = await Order.find()
+    // Sorgu filtresi oluştur
+    let queryFilter = {};
+    
+    // Tarih filtresi
+    if (startDate && endDate) {
+      queryFilter.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    // Durum filtresi
+    if (status) {
+      queryFilter.status = status;
+    }
+
+    // Siparişleri çek
+    const orders = await Order.find(queryFilter)
       .populate({
         path: 'userId',
         select: 'firstName lastName email phone addresses',
       })
       .populate('items.productId', 'name')
-      .sort({ createdAt: -1 }) // Yeni siparişler önce
+      .sort({ createdAt: -1 })
       .exec();
 
     // Arama filtrelemesi
@@ -138,6 +154,37 @@ router.put('/:orderId/tracking', adminAuth, async (req, res) => {
       res.status(500).json({ message: 'Sunucu hatası', error: error.message });
     }
   });
+// PUT /api/orders/tracking-by-reference - Update tracking number by reference number
+router.put('/tracking-by-reference', adminAuth, async (req, res) => {
+  try {
+    const { referenceNumber, trackingNumber } = req.body;
+
+    // Kargo takip linki formatına çevir
+    const fullUrl = `https://www.yurticikargo.com/tr/online-servisler/gonderi-sorgula?code=${trackingNumber}`;
+
+    const order = await Order.findById(referenceNumber);
+    if (!order) {
+      return res.json({ 
+        updated: false,
+        message: 'Sipariş bulunamadı.' 
+      });
+    }
+
+    order.trackingNumber = fullUrl;
+    await order.save();
+
+    res.json({ 
+      updated: true, 
+      message: 'Takip numarası güncellendi.' 
+    });
+  } catch (error) {
+    console.error('Tracking update error:', error);
+    res.status(500).json({ 
+      updated: false, 
+      message: 'Takip numarası güncellenirken hata oluştu.' 
+    });
+  }
+});
 
 
 
