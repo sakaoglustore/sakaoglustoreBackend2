@@ -14,20 +14,36 @@ function randomElement(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// Günlük sipariş sayacını getiren fonksiyon
+// 13:00-13:00 arası dönem için sipariş sayacını getiren fonksiyon
 async function getTodayOrderCount() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date();
   
-  // Bugüne ait counter'ı bul veya oluştur
-  let counter = await Counter.findOne({ date: today });
+  // Dönemin başlangıç tarihi (bugün veya dün 13:00)
+  let periodDate = new Date(now);
+  periodDate.setHours(13, 0, 0, 0);
+  
+  // Eğer şu an 13:00'dan önceyse, bir önceki günün 13:00'ını kullan
+  if (now.getHours() < 13) {
+    periodDate.setDate(periodDate.getDate() - 1);
+  }
+  
+  // Bu döneme ait counter'ı bul veya oluştur
+  let counter = await Counter.findOne({ date: periodDate });
   
   if (!counter) {
+    // Yeni bir dönem başlıyor, yeni counter oluştur
+    const lastCounter = await Counter.findOne().sort({ totalCount: -1 });
+    let totalCount = 0;
+    
+    if (lastCounter) {
+      // Eğer varsa son counter'dan devam et, ama 20000'i geçmeyecek şekilde
+      totalCount = lastCounter.totalCount >= 20000 ? 0 : lastCounter.totalCount;
+    }
+    
     counter = new Counter({
-      date: today,
+      date: periodDate,
       orderCount: 0,
-      totalCount: await Counter.countDocuments() > 0 ? 
-        await Counter.findOne().sort({ totalCount: -1 }).then(c => c.totalCount) : 0
+      totalCount: totalCount
     });
     await counter.save();
   }
@@ -39,27 +55,34 @@ router.post('/open-box/:userId/:addressId', async (req, res) => {
   const { userId, addressId } = req.params;
   console.log('userId:', userId, 'addressId:', addressId);
 
-  try {
-    const { quantity } = req.body;
+  try {    const { quantity } = req.body;
 
     if (!quantity || quantity <= 0 || quantity > 3) {
       return res.status(400).json({ message: 'Geçersiz kutu adedi. En az 1, en fazla 3 kutu alabilirsiniz.' });
+    }    const now = new Date();
+    
+    // 13:00-13:00 arası dönem için başlangıç ve bitiş tarihlerini belirle
+    let periodStart = new Date(now);
+    periodStart.setHours(13, 0, 0, 0); // Gün 13:00'da başlar
+    
+    // Eğer şu an 13:00'dan önceyse, periodStart bir önceki gün 13:00 olmalı
+    if (now.getHours() < 13) {
+      periodStart.setDate(periodStart.getDate() - 1);
     }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    // Daily limit kontrolü - Kullanıcı başına günde 1 sipariş, en fazla 3 kutu
-    const todayUserOrders = await Order.countDocuments({
+    
+    let periodEnd = new Date(periodStart);
+    periodEnd.setDate(periodEnd.getDate() + 1); // Bir sonraki gün 12:59:59'a kadar
+    
+    // Daily limit kontrolü - Kullanıcı başına dönemde 1 sipariş, en fazla 3 kutu
+    const periodUserOrders = await Order.countDocuments({
       userId: userId,
       createdAt: {
-        $gte: today,
-        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+        $gte: periodStart,
+        $lt: periodEnd
       }
-    });
-
-    if (todayUserOrders >= 1) {
-      return res.status(403).json({ message: 'Günlük sipariş hakkınızı kullandınız. Her gün saat 01:00 itibariyle yeni sipariş hakkı tanımlanır.' });
-    }    
+    });    if (periodUserOrders >= 1) {
+      return res.status(403).json({ message: 'Günlük sipariş hakkınızı kullandınız. Her gün saat 13:00 itibariyle yeni sipariş hakkı tanımlanır.' });
+    }
     
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
@@ -72,9 +95,8 @@ router.post('/open-box/:userId/:addressId', async (req, res) => {
     if (!giftBox) return res.status(404).json({ message: 'Gift Box bulunamadı.' });
 
     const { low, medium, high } = giftBox.items;
-    
-    // Kullanıcının bu ay high item kazanıp kazanmadığını kontrol et
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      // Kullanıcının bu ay high item kazanıp kazanmadığını kontrol et
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const hasWonHighThisMonth = await Order.findOne({
       userId,
       createdAt: { $gte: firstDayOfMonth },
