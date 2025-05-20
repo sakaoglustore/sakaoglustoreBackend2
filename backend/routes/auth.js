@@ -153,7 +153,7 @@ router.post('/login', async (req, res) => {
 
   try {
     const user = await User.findOne({ email: identifier });
-    if (!user) return res.status(400).json({ message: 'Kullanıcı bulunamadı' });
+    if (!user) return res.status(400).json({ message: 'Kullanıcı bulunamadı. Lütfen mail adresinizi yazarken küçük harf ile başladığından emin olun' });
 
     if (!user.isVerified) {
       // E-posta doğrulama kontrolü başarısız
