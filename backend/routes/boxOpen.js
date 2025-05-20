@@ -19,11 +19,12 @@ async function getTodayOrderCount() {
   const now = new Date();
   
   // Dönemin başlangıç tarihi (bugün veya dün 13:00)
+  // UTC olarak 10:00 (Türkiye saatiyle 13:00'a denk geliyor)
   let periodDate = new Date(now);
-  periodDate.setHours(13, 0, 0, 0);
+  periodDate.setUTCHours(10, 0, 0, 0);
   
-  // Eğer şu an 13:00'dan önceyse, bir önceki günün 13:00'ını kullan
-  if (now.getHours() < 13) {
+  // Eğer şu an UTC 10:00'dan önceyse (Türkiye saatiyle 13:00), bir önceki günün 10:00 UTC'sini kullan
+  if (now.getUTCHours() < 10) {
     periodDate.setDate(periodDate.getDate() - 1);
   }
   
@@ -60,18 +61,18 @@ router.post('/open-box/:userId/:addressId', async (req, res) => {
     if (!quantity || quantity <= 0 || quantity > 3) {
       return res.status(400).json({ message: 'Geçersiz kutu adedi. En az 1, en fazla 3 kutu alabilirsiniz.' });
     }    const now = new Date();
-    
-    // 13:00-13:00 arası dönem için başlangıç ve bitiş tarihlerini belirle
+      // 13:00-13:00 arası dönem için başlangıç ve bitiş tarihlerini belirle
+    // UTC olarak 10:00 (Türkiye saatiyle 13:00'a denk geliyor)
     let periodStart = new Date(now);
-    periodStart.setHours(13, 0, 0, 0); // Gün 13:00'da başlar
+    periodStart.setUTCHours(10, 0, 0, 0); // Gün UTC 10:00'da başlar (Türkiye saatiyle 13:00)
     
-    // Eğer şu an 13:00'dan önceyse, periodStart bir önceki gün 13:00 olmalı
-    if (now.getHours() < 13) {
+    // Eğer şu an UTC 10:00'dan önceyse (Türkiye saatiyle 13:00), bir önceki günün UTC 10:00'ını kullan
+    if (now.getUTCHours() < 10) {
       periodStart.setDate(periodStart.getDate() - 1);
     }
     
     let periodEnd = new Date(periodStart);
-    periodEnd.setDate(periodEnd.getDate() + 1); // Bir sonraki gün 12:59:59'a kadar
+    periodEnd.setDate(periodEnd.getDate() + 1); // Bir sonraki gün UTC 10:00'a kadar (Türkiye saatiyle 13:00)
     
     // Daily limit kontrolü - Kullanıcı başına dönemde 1 sipariş, en fazla 3 kutu
     const periodUserOrders = await Order.countDocuments({
