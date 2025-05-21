@@ -30,6 +30,70 @@ router.put('/update-profile/:id', async (req, res) => {
   }
 });
 
+// 👤 Admin tarafından kullanıcı doğrulama
+router.put('/verify/:id', adminAuth, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationExpires = undefined;
+    user.temporaryCreatedAt = undefined;
+
+    await user.save();
+
+    res.status(200).json({
+      message: 'Kullanıcı başarıyla doğrulandı',
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        isVerified: user.isVerified
+      }
+    });
+  } catch (err) {
+    console.error('Doğrulama hatası:', err);
+    res.status(500).json({ message: 'Doğrulama işlemi başarısız', error: err.message });
+  }
+});
+
+// 👥 Admin tarafından toplu kullanıcı doğrulama
+router.put('/verify/bulk', adminAuth, async (req, res) => {
+  try {
+    const { userIds } = req.body;
+
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ message: 'Geçerli kullanıcı ID\'leri gönderilmeli' });
+    }
+
+    const result = await User.updateMany(
+      { _id: { $in: userIds } },
+      {
+        $set: { isVerified: true },
+        $unset: {
+          verificationToken: "",
+          verificationExpires: "",
+          temporaryCreatedAt: ""
+        }
+      }
+    );
+
+    res.status(200).json({
+      message: `${result.modifiedCount} kullanıcı başarıyla doğrulandı`,
+      modifiedCount: result.modifiedCount
+    });
+  } catch (err) {
+    console.error('Toplu doğrulama hatası:', err);
+    res.status(500).json({ message: 'Toplu doğrulama işlemi başarısız', error: err.message });
+  }
+});
+
 // ➕ Adres Ekle
 router.post('/address/add/:id', async (req, res) => {
   const { title, city, district, fullAddress, phone } = req.body;
@@ -134,7 +198,12 @@ router.get('/addresses/:id', async (req, res) => {
 // 📦 Admin Kullanıcı Listesi
 router.get('/all', adminAuth, async (req, res) => {
   try {
-    const users = await User.find().select('-password');
+    const users = await User.find().select('-password').lean();
+    
+    // Doğrulanmış ve doğrulanmamış kullanıcıları ayrı ayrı say
+    const verifiedCount = users.filter(user => user.isVerified).length;
+    const unverifiedCount = users.length - verifiedCount;
+    
     res.status(200).json(users);
   } catch (err) {
     res.status(500).json({ message: 'Kullanıcılar alınamadı', error: err.message });
