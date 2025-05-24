@@ -37,17 +37,10 @@ const UserSchema = new mongoose.Schema({
   orders:            [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }],
   openedBoxesToday:  { type: Number, default: 0 },
   lastBoxOpenedDate: Date,
-  isVerified:         { type: Boolean, default: false },
-  verificationToken:  { type: String },
-  verificationExpires:{ type: Date },
-  temporaryCreatedAt: { type: Date, default: null },
   
   // Şifre sıfırlama alanları
   resetToken:         { type: String },
   resetExpires:       { type: Date }
 });
-
-// Sadece onaysız kullanıcıları 24 saat sonra sil
-UserSchema.index({ temporaryCreatedAt: 1 }, { expireAfterSeconds: 86400 });
 
 module.exports = mongoose.model('User', UserSchema);

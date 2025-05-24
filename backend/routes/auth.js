@@ -8,6 +8,7 @@ const User = require('../models/User');
 const router = express.Router();
 const SECRET_KEY = 'sakaoglu_secret_key';
 
+/*
 // Yeni doğrulama token oluşturup e-posta gönderme yardımcı fonksiyonu
 async function generateNewVerificationToken(user) {
   try {
@@ -47,6 +48,7 @@ async function generateNewVerificationToken(user) {
     return false;
   }
 }
+*/
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -74,49 +76,19 @@ router.post('/signup', async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const newUser = new User({
       firstName,
       lastName,
       email,
       phone,
-      password: hashedPassword,
-      isVerified: false,
-      verificationToken,
-      verificationExpires,
-      temporaryCreatedAt: new Date()
+      password: hashedPassword
     });
 
     await newUser.save();
 
-    const verificationUrl = `https://sakaoglustore.net/verify?token=${verificationToken}&email=${email}`;    try {
-      await transporter.sendMail({
-        from: 'Sakaoglu Store <info@sakaoglustore.com>',
-        to: email,
-        subject: 'Hesabınızı Doğrulayın',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-            <h2 style="color: #333;">Hesap Doğrulaması</h2>
-            <p>Merhaba ${firstName},</p>
-            <p>Sakaoglu Store'a hoş geldiniz! Hesabınızı doğrulamak için aşağıdaki bağlantıya tıklayın:</p>
-            <p style="text-align: center; margin: 20px 0;">
-              <a href="${verificationUrl}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Hesabımı Doğrula</a>
-            </p>
-            <p style="color: #666; font-size: 13px;">Bu bağlantı 24 saat süreyle geçerlidir. Bu süre sonunda bağlantı geçerliliğini yitirecektir.</p>
-            <p>İyi günler,<br>Sakaoglu Store Ekibi</p>
-          </div>
-        `
-      });
-      console.log('✅ Mail başarıyla gönderildi');
-    } catch (err) {
-      console.error('❌ Mail gönderilemedi:', err);
-    }    
-
     res.status(201).json({ 
-      message: 'Kayıt başarılı. Lütfen e-postanızı doğrulayın. E posta görünmüyor ise spam bölümünü kontrol ediniz.',
-      requireEmailVerification: true,
+      message: 'Kayıt başarılı. Şimdi giriş yapabilirsiniz.',
       email: email
     });
   } catch (err) {
@@ -124,6 +96,7 @@ router.post('/signup', async (req, res) => {
   }
 });
 
+/*
 // E-posta Doğrulama
 router.get('/verify', async (req, res) => {
   const { token, email } = req.query;
@@ -146,6 +119,7 @@ router.get('/verify', async (req, res) => {
     res.status(500).send('Bir hata oluştu.');
   }
 });
+*/
 
 // Giriş
 router.post('/login', async (req, res) => {
@@ -153,19 +127,7 @@ router.post('/login', async (req, res) => {
 
   try {
     const user = await User.findOne({ email: identifier });
-    if (!user) return res.status(400).json({ message: 'Kullanıcı bulunamadı. Lütfen mail adresinizi yazarken küçük harf ile başladığından emin olun' });
-
-    if (!user.isVerified) {
-      // E-posta doğrulama kontrolü başarısız
-      const resendVerificationLink = await generateNewVerificationToken(user);
-      
-      return res.status(403).json({ 
-        message: 'E-posta adresinizi doğrulamadan giriş yapamazsınız.', 
-        requireEmailVerification: true,
-        email: user.email,
-        resendVerification: resendVerificationLink
-      });
-    }
+    if (!user) return res.status(400).json({ message: 'Kullanıcı bulunamadı. Lütfen mail adresinizi yazarken küçük harf ile başladığından emin olun' });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Şifre hatalı' });

@@ -213,7 +213,7 @@ router.post('/open-box/:userId/:addressId', async (req, res) => {
       const availableLowItems = low.filter(l => !user.collectedLowItems.includes(l.id));
       
       // Eğer kullanıcı 10 unique item topladıysa veya hiç available item kalmadıysa reset at
-      if (user.collectedLowItems.length >= 8 || availableLowItems.length === 0) {
+      if (user.collectedLowItems.length >= 7 || availableLowItems.length === 0) {
         user.collectedLowItems = []; // Reset collection
         console.log('Low items collection reset for user:', userId);
       }
