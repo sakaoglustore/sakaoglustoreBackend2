@@ -26,8 +26,7 @@ const UserSchema = new mongoose.Schema({
     default: [],
     validate: {
       validator: function(array) {
-        // Ensure no duplicates and max 15 items
-        return array.length <= 10 && new Set(array).size === array.length;
+        return array.length <= 7 && new Set(array).size === array.length;
       },
       message: 'Collected low items must be unique and cannot exceed 15 items'
     }
