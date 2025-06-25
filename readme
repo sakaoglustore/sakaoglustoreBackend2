@@ -1,4 +1,82 @@
-cd backend
-npm init -y
-npm install express mongoose cors
-node server.js
+# Sakaoglu Store Backend
+
+Bu proje, Sakaoglu Store için geliştirilen Node.js tabanlı bir e-ticaret API'sidir. Kullanıcı, admin, ürün, sipariş, ödeme, sepet, kutu açılımı, referans sistemi ve çeşitli cron görevlerini içerir.
+
+## Başlıca Özellikler
+- Kullanıcı ve admin kimlik doğrulama (JWT)
+- Hediye kutusu ve ürün yönetimi
+- Sipariş ve ödeme işlemleri
+- Sepet yönetimi
+- Kutu açılımı (box opening)
+- Referans sistemi
+- E-posta ile doğrulama ve bildirimler (Nodemailer)
+- Dosya yükleme (Multer)
+- Zamanlanmış görevler (node-cron)
+- PDF ve Excel çıktıları (pdfkit, xlsx)
+
+## Kurulum
+
+1. **Backend klasörüne geçin:**
+   ```powershell
+   cd backend
+   ```
+2. **Bağımlılıkları yükleyin:**
+   ```powershell
+   npm install
+   ```
+3. **Ortam değişkenlerini ayarlayın:**
+   - Bir `.env` dosyası oluşturun ve aşağıdaki gibi doldurun:
+     ```env
+     MONGO_URL=your_mongodb_connection_string
+     PORT=5000
+     JWT_SECRET=your_jwt_secret
+     ...
+     ```
+4. **Sunucuyu başlatın:**
+   ```powershell
+   npm start
+   ```
+
+## Klasör Yapısı
+- `routes/`   : API endpointleri (auth, user, admin, orders, payments, cart, giftBoxes, vb.)
+- `models/`   : Mongoose modelleri (User, Admin, GiftBox, Order, vb.)
+- `middlewares/` : Orta katmanlar (ör: adminAuth)
+- `services/` : Servis katmanı (ör: referralService)
+- `cron/`     : Zamanlanmış görevler (ör: cleanupUnverifiedUsers.js)
+- `uploads/`  : Yüklenen dosyalar
+- `utils/`    : Yardımcı fonksiyonlar
+
+## Kullanılan Başlıca Paketler
+- express
+- mongoose
+- cors
+- dotenv
+- jsonwebtoken
+- bcrypt, bcryptjs
+- multer
+- nodemailer
+- node-cron
+- pdfkit
+- xlsx
+
+## API Endpointleri
+Ana endpointler `/api/` ile başlar. Örnekler:
+- `/api/auth`         : Kullanıcı kimlik doğrulama
+- `/api/user`         : Kullanıcı işlemleri
+- `/api/gifts`        : Hediye kutuları
+- `/api/cart`         : Sepet işlemleri
+- `/api/orders`       : Sipariş işlemleri
+- `/api/payment`      : Ödeme işlemleri
+- `/api/adminAuth`    : Admin kimlik doğrulama
+- `/api/admins`       : Admin işlemleri
+- `/api/adminStats`   : Admin istatistikleri
+- `/api/box`          : Kutu açılımı
+
+## Geliştirici Notları
+- Proje Node.js 18+ ve MongoDB ile uyumludur.
+- Geliştirme sırasında `nodemon` kullanabilirsiniz.
+- Detaylı endpoint dokümantasyonu için kodu inceleyiniz.
+
+---
+
+Herhangi bir sorun veya katkı için lütfen iletişime geçin.
